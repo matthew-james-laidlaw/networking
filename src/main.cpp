@@ -1,8 +1,32 @@
-#include "WindowsChannel.h"
-#include "WindowsServer.h"
+#include "Channel.h"
 #include "Client.h"
+#include "Server.h"
 
 #include <thread>
+
+class WinsockRuntime
+{
+public:
+
+	WinsockRuntime()
+	{
+		WSAData data{};
+		auto result = WSAStartup(MAKEWORD(2, 2), &data);
+		if (result != 0)
+		{
+			throw std::runtime_error("WSAStartup failed");
+		}
+	}
+
+	~WinsockRuntime()
+	{
+		WSACleanup();
+	}
+
+	WinsockRuntime(WinsockRuntime const&) = delete;
+	WinsockRuntime& operator=(WinsockRuntime const&) = delete;
+
+};
 
 auto Encode(char const* msg) -> std::vector<uint8_t>
 {
@@ -11,9 +35,11 @@ auto Encode(char const* msg) -> std::vector<uint8_t>
 
 auto main() -> int
 {
+	auto winsock_runtime = WinsockRuntime();
+
 	auto server_thread = std::thread([]()
 	{
-		auto server = WindowsServer();
+		auto server = Server();
 		server.Listen(8080);
 		for (int i = 0; i < 3; ++i)
 		{

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Channel.h"
-#include "WindowsChannel.h"
 
 #include <memory>
 #include <string_view>
@@ -13,7 +12,7 @@
 
 #include <print>
 
-inline auto Connect(std::string_view address, uint16_t port) -> std::unique_ptr<IChannel>
+inline auto Connect(std::string_view address, uint16_t port) -> std::unique_ptr<Channel>
 {
 	auto wsa_data = WSADATA{};
 
@@ -49,5 +48,5 @@ inline auto Connect(std::string_view address, uint16_t port) -> std::unique_ptr<
 
 	std::println("== [client] connected to server at address '{}:{}'", address, port);
 
-	return std::make_unique<WindowsChannel>(client);
+	return std::make_unique<Channel>(client);
 }
