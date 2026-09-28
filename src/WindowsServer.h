@@ -19,12 +19,10 @@ public:
 
 	~WindowsServer()
 	{
-		closesocket(m_server);
-		WSACleanup();
-		std::println("== [server] stopped listening");
+		Close();
 	}
 
-	auto Listen() -> void override
+	auto Listen(uint16_t port) -> void override
 	{
 		auto wsa_data = WSADATA{};
 
@@ -41,15 +39,12 @@ public:
 			std::println("== [server] socket failed with error code '{}'", WSAGetLastError());
 			throw std::runtime_error("socket failed");
 		}
-
-		PCSTR addr = "127.0.0.1";
-		u_short port = 8080;
-
+		
 		sockaddr_in server_address{};
 		server_address.sin_family = AF_INET;
 		server_address.sin_port = htons(port);
 
-		// convert IP address from text to binary form
+		PCSTR addr = "127.0.0.1";
 		inet_pton(AF_INET, addr, &server_address.sin_addr);
 
 		result = bind(m_server, reinterpret_cast<sockaddr*>(&server_address), sizeof(server_address));
@@ -88,6 +83,13 @@ public:
 		std::println("== [server] accepted client connection from '{}:{}'", client_ip, client_port);
 
 		return std::make_unique<WindowsChannel>(client);
+	}
+
+	auto Close() -> void override
+	{
+		closesocket(m_server);
+		WSACleanup();
+		std::println("== [server] stopped listening");
 	}
 
 };

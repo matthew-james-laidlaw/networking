@@ -1,6 +1,6 @@
 #include "WindowsChannel.h"
-#include "WindowsClient.h"
 #include "WindowsServer.h"
+#include "Client.h"
 
 #include <thread>
 
@@ -14,7 +14,7 @@ auto main() -> int
 	auto server_thread = std::thread([]()
 	{
 		auto server = WindowsServer();
-		server.Listen();
+		server.Listen(8080);
 		for (int i = 0; i < 3; ++i)
 		{
 			auto conn = server.Accept();
@@ -24,22 +24,19 @@ auto main() -> int
 
 	auto client_thread_1 = std::thread([]()
 	{
-		auto client = WindowsClient();
-		auto conn = client.Connect();
+		auto conn = Connect("127.0.0.1", 8080);
 		conn->Send(Encode("Hello, World!"));
 	});
 
 	auto client_thread_2 = std::thread([]()
 	{
-		auto client = WindowsClient();
-		auto conn = client.Connect();
+		auto conn = Connect("127.0.0.1", 8080);
 		conn->Send(Encode("Hello, World!"));
 	});
 
 	auto client_thread_3 = std::thread([]()
 	{
-		auto client = WindowsClient();
-		auto conn = client.Connect();
+		auto conn = Connect("127.0.0.1", 8080);
 		conn->Send(Encode("Hello, World!"));
 	});
 
