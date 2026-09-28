@@ -1,8 +1,8 @@
-#include "Channel.h"
-#include "Client.h"
-#include "Server.h"
+#include <Connection.h>
+#include <Server.h>
 
 #include <thread>
+#include <iostream>
 
 class WinsockRuntime
 {
@@ -36,15 +36,21 @@ auto Encode(char const* msg) -> std::vector<uint8_t>
 auto main() -> int
 {
 	auto winsock_runtime = WinsockRuntime();
+	auto server = Server(8080);
 
-	auto server_thread = std::thread([]()
+	auto server_thread = std::thread([&server]()
 	{
-		auto server = Server();
-		server.Listen(8080);
-		for (int i = 0; i < 3; ++i)
+		try
 		{
-			auto conn = server.Accept();
-			conn->Receive(strlen("Hello, World!"));
+			for (int i = 0; i < 3; ++i)
+			{
+				auto conn = server.Accept();
+				conn->Receive(strlen("Hello, World!"));
+			}
+		}
+		catch (std::exception const& e)
+		{
+			std::cout << "== [server] " << e.what() << '\n';
 		}
 	});
 

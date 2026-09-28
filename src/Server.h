@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Channel.h>
+#include <Connection.h>
 
 #include <WinSock2.h>
 #include <WS2tcpip.h>
@@ -14,47 +14,26 @@ private:
 
 	SOCKET m_server;
 
+	std::string m_addr = "127.0.0.1";
+	uint16_t m_port;
+
 public:
+
+	Server(uint16_t port)
+		: m_server(Socket())
+		, m_port(port)
+	{
+		Bind(m_port);
+		Listen();
+	}
 
 	~Server()
 	{
-		Close();
+		closesocket(m_server);
+		std::println("== [server] stopped listening");
 	}
 
-	auto Listen(uint16_t port) -> void
-	{
-		m_server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (m_server == INVALID_SOCKET)
-		{
-			std::println("== [server] socket failed with error code '{}'", WSAGetLastError());
-			throw std::runtime_error("socket failed");
-		}
-		
-		sockaddr_in server_address{};
-		server_address.sin_family = AF_INET;
-		server_address.sin_port = htons(port);
-
-		PCSTR addr = "127.0.0.1";
-		inet_pton(AF_INET, addr, &server_address.sin_addr);
-
-		auto result = bind(m_server, reinterpret_cast<sockaddr*>(&server_address), sizeof(server_address));
-		if (result == SOCKET_ERROR)
-		{
-			std::println("== [server] bind failed with error code '{}'", WSAGetLastError());
-			throw std::runtime_error("bind failed");
-		}
-
-		result = listen(m_server, SOMAXCONN);
-		if (result == SOCKET_ERROR)
-		{
-			std::println("== [server] listen failed with error code '{}'", WSAGetLastError());
-			throw std::runtime_error("listen failed");
-		}
-
-		std::println("== [server] listening on '{}:{}'", addr, port);
-	}
-
-	auto Accept() -> std::unique_ptr<Channel>
+	auto Accept() -> std::unique_ptr<Connection>
 	{
 		sockaddr_in client_addr{};
 		int client_addr_size = sizeof(client_addr);
@@ -72,13 +51,45 @@ public:
 
 		std::println("== [server] accepted client connection from '{}:{}'", client_ip, client_port);
 
-		return std::make_unique<Channel>(client);
+		return std::make_unique<Connection>(client);
 	}
 
-	auto Close() -> void
+private:
+
+	static auto Socket() -> SOCKET
 	{
-		closesocket(m_server);
-		std::println("== [server] stopped listening");
+		auto sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (sock == INVALID_SOCKET)
+		{
+			throw std::runtime_error(std::format("socket failed with error code '{}'", WSAGetLastError()));
+		}
+		return sock;
+	}
+
+	auto Bind(uint16_t port) -> void
+	{
+		sockaddr_in server_address{};
+		server_address.sin_family = AF_INET;
+		server_address.sin_port = htons(port);
+
+		PCSTR addr = "127.0.0.1";
+		inet_pton(AF_INET, addr, &server_address.sin_addr);
+
+		auto result = bind(m_server, reinterpret_cast<sockaddr*>(&server_address), sizeof(server_address));
+		if (result == SOCKET_ERROR)
+		{
+			throw std::runtime_error(std::format("bind failed with error code '{}'", WSAGetLastError()));
+		}
+	}
+
+	auto Listen() -> void
+	{
+		auto result = listen(m_server, SOMAXCONN);
+		if (result == SOCKET_ERROR)
+		{
+			throw std::runtime_error(std::format("listen failed with error code '{}'", WSAGetLastError()));
+		}
+		std::println("== [server] listening on '{}:{}'", m_addr, m_port);
 	}
 
 };

@@ -1,18 +1,49 @@
 #pragma once
 
-#include "Channel.h"
-
-#include <memory>
-#include <string_view>
-
 #include <WinSock2.h>
 #include <WS2tcpip.h>
-
 #pragma comment(lib, "Ws2_32.lib")
 
+#include <cstdint>
 #include <print>
+#include <vector>
 
-inline auto Connect(std::string_view address, uint16_t port) -> std::unique_ptr<Channel>
+class Connection
+{
+private:
+
+	SOCKET m_socket;
+
+public:
+
+	explicit Connection(SOCKET socket)
+		: m_socket(socket)
+	{}
+
+	~Connection()
+	{
+		Close();
+	}
+
+	auto Send(std::vector<uint8_t> const& bytes) -> void
+	{
+
+	}
+
+	auto Receive(size_t num_bytes) -> std::vector<uint8_t>
+	{
+		return {};
+	}
+
+	auto Close() -> void
+	{
+		closesocket(m_socket);
+		std::println("== [client] closed connection");
+	}
+
+};
+
+inline auto Connect(std::string_view address, uint16_t port) -> std::unique_ptr<Connection>
 {
 	auto wsa_data = WSADATA{};
 
@@ -48,5 +79,5 @@ inline auto Connect(std::string_view address, uint16_t port) -> std::unique_ptr<
 
 	std::println("== [client] connected to server at address '{}:{}'", address, port);
 
-	return std::make_unique<Channel>(client);
+	return std::make_unique<Connection>(client);
 }
