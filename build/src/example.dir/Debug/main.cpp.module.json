@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "example.dir\\Debug\\main.obj",
+            "outputs": [
+                "C:\\Users\\matth.MATT\\OneDrive\\Desktop\\networking\\build\\src\\example.dir\\Debug\\vc145.pdb",
+                "example.dir\\Debug\\"
+            ],
+            "requires": []
+        }
+    ]
+}
